@@ -3,11 +3,11 @@ package com.github.ooknight.utils.console.serializer;
 public class SerialContext {
 
     public final SerialContext parent;
-    public final Object        object;
-    public final Object        fieldName;
-    public final int           features;
+    public final Object object;
+    public final Object fieldName;
+    public final int features;
 
-    public SerialContext(SerialContext parent, Object object, Object fieldName, int features, int fieldFeatures){
+    public SerialContext(SerialContext parent, Object object, Object fieldName, int features, int fieldFeatures) {
         this.parent = parent;
         this.object = object;
         this.fieldName = fieldName;
@@ -33,22 +33,20 @@ public class SerialContext {
                 buf.append(".null");
             } else if (fieldName instanceof Integer) {
                 buf.append('[');
-                buf.append(((Integer)fieldName).intValue());
+                buf.append(((Integer) fieldName).intValue());
                 buf.append(']');
             } else {
                 buf.append('.');
-
                 String fieldName = this.fieldName.toString();
                 boolean special = false;
                 for (int i = 0; i < fieldName.length(); ++i) {
                     char ch = fieldName.charAt(i);
-                    if ((ch >= '0' && ch <='9') || (ch >= 'A' && ch <='Z') || (ch >= 'a' && ch <='z') || ch > 128) {
+                    if ((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || ch > 128) {
                         continue;
                     }
                     special = true;
                     break;
                 }
-
                 if (special) {
                     for (int i = 0; i < fieldName.length(); ++i) {
                         char ch = fieldName.charAt(i);
@@ -56,7 +54,7 @@ public class SerialContext {
                             buf.append('\\');
                             buf.append('\\');
                             buf.append('\\');
-                        } else if ((ch >= '0' && ch <='9') || (ch >= 'A' && ch <='Z') || (ch >= 'a' && ch <='z') || ch > 128) {
+                        } else if ((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || ch > 128) {
                             buf.append(ch);
                             continue;
                         } else {

@@ -7,10 +7,6 @@ import java.lang.reflect.Type;
 
 import com.github.ooknight.utils.console.util.FieldInfo;
 
-/**
- * @since 1.2.9
- *
- */
 public final class BeanContext {
 
     private final Class<?>  beanClass;

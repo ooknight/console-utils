@@ -3,7 +3,7 @@ package com.github.ooknight.utils.console.serializer.codec;
 import com.github.ooknight.utils.console.serializer.JSONSerializer;
 import com.github.ooknight.utils.console.serializer.ObjectSerializer;
 import com.github.ooknight.utils.console.serializer.SerializeWriter;
-import com.github.ooknight.utils.console.serializer.SerializerFeature;
+import com.github.ooknight.utils.console.serializer.Feature;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicLongArray;
 
 public class AtomicCodec implements ObjectSerializer {
 
-    public final static AtomicCodec instance = new AtomicCodec();
+    public static final AtomicCodec instance = new AtomicCodec();
 
     public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException {
         SerializeWriter out = serializer.out;
@@ -35,7 +35,7 @@ public class AtomicCodec implements ObjectSerializer {
             return;
         }
         if (object == null) {
-            out.writeNull(SerializerFeature.WRITE_NULL_LIST_AS_EMPTY);
+            out.writeNull(Feature.WRITE_NULL_LIST_AS_EMPTY);
             return;
         }
         if (object instanceof AtomicIntegerArray) {

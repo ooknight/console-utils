@@ -4,7 +4,6 @@ import com.github.ooknight.utils.console.Inspector;
 import com.github.ooknight.utils.console.JSONException;
 import com.github.ooknight.utils.console.PropertyNamingStrategy;
 import com.github.ooknight.utils.console.annotation.JSONField;
-import com.github.ooknight.utils.console.annotation.JSONType;
 import com.github.ooknight.utils.console.serializer.codec.AtomicCodec;
 import com.github.ooknight.utils.console.serializer.codec.AwtCodec;
 import com.github.ooknight.utils.console.serializer.codec.BigDecimalCodec;
@@ -28,7 +27,6 @@ import com.github.ooknight.utils.console.serializer.codec.StringCodec;
 import com.github.ooknight.utils.console.util.ASMUtils;
 import com.github.ooknight.utils.console.util.FieldInfo;
 import com.github.ooknight.utils.console.util.IdentityHashMap;
-import com.github.ooknight.utils.console.util.ServiceLoader;
 import com.github.ooknight.utils.console.util.TypeUtils;
 
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -74,7 +72,7 @@ import java.util.regex.Pattern;
 
 public class SerializeConfig {
 
-    public final static SerializeConfig globalInstance = new SerializeConfig();
+    public static final SerializeConfig globalInstance = new SerializeConfig();
     private static boolean awtError = false;
     private static boolean jdk8Error = false;
     private static boolean oracleJdbcError = false;
@@ -159,41 +157,7 @@ public class SerializeConfig {
     }
 
     public ObjectSerializer createJavaBeanSerializer(SerializeBeanInfo beanInfo) {
-        JSONType jsonType = beanInfo.jsonType;
         boolean asm = this.asm && !fieldBased;
-        if (jsonType != null) {
-            Class<?> serializerClass = jsonType.serializer();
-            if (serializerClass != Void.class) {
-                try {
-                    Object seralizer = serializerClass.newInstance();
-                    if (seralizer instanceof ObjectSerializer) {
-                        return (ObjectSerializer) seralizer;
-                    }
-                } catch (Throwable e) {
-                    // skip
-                }
-            }
-            if (jsonType.asm() == false) {
-                asm = false;
-            }
-            if (asm) {
-                for (SerializerFeature feature : jsonType.serialzeFeatures()) {
-                    if (SerializerFeature.WRITE_NON_STRING_VALUE_AS_STRING == feature //
-                            || SerializerFeature.WRITE_ENUM_USING_TO_STRING == feature //
-                            || SerializerFeature.NOT_WRITE_DEFAULT_VALUE == feature
-                            || SerializerFeature.BROWSER_COMPATIBLE == feature) {
-                        asm = false;
-                        break;
-                    }
-                }
-            }
-            if (asm) {
-                final Class<? extends SerializeFilter>[] filterClasses = jsonType.serialzeFilters();
-                if (filterClasses.length != 0) {
-                    asm = false;
-                }
-            }
-        }
         Class<?> clazz = beanInfo.beanType;
         if (!Modifier.isPublic(beanInfo.beanType.getModifiers())) {
             return new JavaBeanSerializer(beanInfo);
@@ -240,12 +204,12 @@ public class SerializeConfig {
                     asm = false;
                     break;
                 }
-                for (SerializerFeature feature : annotation.serialzeFeatures()) {
-                    if (SerializerFeature.WRITE_NON_STRING_VALUE_AS_STRING == feature //
-                            || SerializerFeature.WRITE_ENUM_USING_TO_STRING == feature //
-                            || SerializerFeature.NOT_WRITE_DEFAULT_VALUE == feature
-                            || SerializerFeature.BROWSER_COMPATIBLE == feature
-                            || SerializerFeature.WRITE_CLASS_NAME == feature) {
+                for (Feature feature : annotation.serialzeFeatures()) {
+                    if (Feature.WRITE_NON_STRING_VALUE_AS_STRING == feature //
+                            || Feature.WRITE_ENUM_USING_TO_STRING == feature //
+                            || Feature.NOT_WRITE_DEFAULT_VALUE == feature
+                            || Feature.BROWSER_COMPATIBLE == feature
+                            || Feature.WRITE_CLASS_NAME == feature) {
                         asm = false;
                         break;
                     }
@@ -344,8 +308,6 @@ public class SerializeConfig {
 
     /**
      * add class level serialize filter
-     *
-     * @since 1.2.10
      */
     public void addFilter(Class<?> clazz, SerializeFilter filter) {
         ObjectSerializer serializer = getObjectWriter(clazz);
@@ -365,10 +327,8 @@ public class SerializeConfig {
 
     /**
      * class level serializer feature config
-     *
-     * @since 1.2.12
      */
-    public void config(Class<?> clazz, SerializerFeature feature, boolean value) {
+    public void config(Class<?> clazz, Feature feature, boolean value) {
         ObjectSerializer serializer = getObjectWriter(clazz, false);
         if (serializer == null) {
             SerializeBeanInfo beanInfo = TypeUtils.buildBeanInfo(clazz, null, propertyNamingStrategy);
@@ -408,42 +368,6 @@ public class SerializeConfig {
     private ObjectSerializer getObjectWriter(Class<?> clazz, boolean create) {
         ObjectSerializer writer = serializers.get(clazz);
         if (writer == null) {
-            try {
-                final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-                for (Object o : ServiceLoader.load(AutowiredObjectSerializer.class, classLoader)) {
-                    if (!(o instanceof AutowiredObjectSerializer)) {
-                        continue;
-                    }
-                    AutowiredObjectSerializer autowired = (AutowiredObjectSerializer) o;
-                    for (Type forType : autowired.getAutowiredFor()) {
-                        put(forType, autowired);
-                    }
-                }
-            } catch (ClassCastException ex) {
-                // skip
-            }
-            writer = serializers.get(clazz);
-        }
-        if (writer == null) {
-            final ClassLoader classLoader = Inspector.class.getClassLoader();
-            if (classLoader != Thread.currentThread().getContextClassLoader()) {
-                try {
-                    for (Object o : ServiceLoader.load(AutowiredObjectSerializer.class, classLoader)) {
-                        if (!(o instanceof AutowiredObjectSerializer)) {
-                            continue;
-                        }
-                        AutowiredObjectSerializer autowired = (AutowiredObjectSerializer) o;
-                        for (Type forType : autowired.getAutowiredFor()) {
-                            put(forType, autowired);
-                        }
-                    }
-                } catch (ClassCastException ex) {
-                    // skip
-                }
-                writer = serializers.get(clazz);
-            }
-        }
-        if (writer == null) {
             String className = clazz.getName();
             Class<?> superClass;
             if (Map.class.isAssignableFrom(clazz)) {
@@ -454,29 +378,17 @@ public class SerializeConfig {
                 put(clazz, writer = CollectionCodec.instance);
             } else if (Date.class.isAssignableFrom(clazz)) {
                 put(clazz, writer = DateCodec.instance);
-            } else if (JSONSerializable.class.isAssignableFrom(clazz)) {
-                put(clazz, writer = JSONSerializableSerializer.instance);
             } else if (clazz.isEnum()) {
-                JSONType jsonType = TypeUtils.getAnnotation(clazz, JSONType.class);
-                if (jsonType != null && jsonType.serializeEnumAsJavaBean()) {
-                    put(clazz, writer = createJavaBeanSerializer(clazz));
-                } else {
-                    put(clazz, writer = EnumSerializer.instance);
-                }
+                put(clazz, writer = EnumSerializer.instance);
             } else if ((superClass = clazz.getSuperclass()) != null && superClass.isEnum()) {
-                JSONType jsonType = TypeUtils.getAnnotation(superClass, JSONType.class);
-                if (jsonType != null && jsonType.serializeEnumAsJavaBean()) {
-                    put(clazz, writer = createJavaBeanSerializer(clazz));
-                } else {
-                    put(clazz, writer = EnumSerializer.instance);
-                }
+                put(clazz, writer = EnumSerializer.instance);
             } else if (clazz.isArray()) {
                 Class<?> componentType = clazz.getComponentType();
                 ObjectSerializer compObjectSerializer = getObjectWriter(componentType);
                 put(clazz, writer = new ArraySerializer(componentType, compObjectSerializer));
             } else if (Throwable.class.isAssignableFrom(clazz)) {
                 SerializeBeanInfo beanInfo = TypeUtils.buildBeanInfo(clazz, null, propertyNamingStrategy);
-                beanInfo.features |= SerializerFeature.WRITE_CLASS_NAME.mask;
+                beanInfo.features |= Feature.WRITE_CLASS_NAME.mask;
                 put(clazz, writer = new JavaBeanSerializer(beanInfo));
             } else if (TimeZone.class.isAssignableFrom(clazz) || Map.Entry.class.isAssignableFrom(clazz)) {
                 put(clazz, writer = MiscCodec.instance);
@@ -498,18 +410,10 @@ public class SerializeConfig {
             } else if (org.w3c.dom.Node.class.isAssignableFrom(clazz)) {
                 put(clazz, writer = MiscCodec.instance);
             } else {
-                if (className.startsWith("java.awt.") //
-                        && AwtCodec.support(clazz) //
-                ) {
-                    // awt
+                if (className.startsWith("java.awt.") && AwtCodec.support(clazz)) {
                     if (!awtError) {
                         try {
-                            String[] names = new String[]{
-                                    "java.awt.Color",
-                                    "java.awt.Font",
-                                    "java.awt.Point",
-                                    "java.awt.Rectangle"
-                            };
+                            String[] names = new String[]{"java.awt.Color", "java.awt.Font", "java.awt.Point", "java.awt.Rectangle"};
                             for (String name : names) {
                                 if (name.equals(className)) {
                                     put(Class.forName(name), writer = AwtCodec.instance);
@@ -713,22 +617,12 @@ public class SerializeConfig {
         return this.serializers.put(type, value);
     }
 
-    /**
-     * 1.2.24
-     *
-     * @param enumClasses
-     */
     public void configEnumAsJavaBean(Class<? extends Enum>... enumClasses) {
         for (Class<? extends Enum> enumClass : enumClasses) {
             put(enumClass, createJavaBeanSerializer(enumClass));
         }
     }
 
-    /**
-     * for spring config support
-     *
-     * @param propertyNamingStrategy
-     */
     public void setPropertyNamingStrategy(PropertyNamingStrategy propertyNamingStrategy) {
         this.propertyNamingStrategy = propertyNamingStrategy;
     }

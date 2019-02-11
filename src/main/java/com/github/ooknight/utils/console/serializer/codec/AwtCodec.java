@@ -2,10 +2,10 @@ package com.github.ooknight.utils.console.serializer.codec;
 
 import com.github.ooknight.utils.console.Inspector;
 import com.github.ooknight.utils.console.JSONException;
+import com.github.ooknight.utils.console.serializer.Feature;
 import com.github.ooknight.utils.console.serializer.JSONSerializer;
 import com.github.ooknight.utils.console.serializer.ObjectSerializer;
 import com.github.ooknight.utils.console.serializer.SerializeWriter;
-import com.github.ooknight.utils.console.serializer.SerializerFeature;
 
 import java.awt.*;
 import java.io.IOException;
@@ -13,18 +13,14 @@ import java.lang.reflect.Type;
 
 public class AwtCodec implements ObjectSerializer {
 
-    public final static AwtCodec instance = new AwtCodec();
+    public static final AwtCodec instance = new AwtCodec();
 
     public static boolean support(Class<?> clazz) {
-        return clazz == Point.class //
-                || clazz == Rectangle.class //
-                || clazz == Font.class //
-                || clazz == Color.class //
-                ;
+        return clazz == Point.class || clazz == Rectangle.class || clazz == Font.class || clazz == Color.class;
     }
 
-    public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType,
-                      int features) throws IOException {
+    @Override
+    public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException {
         SerializeWriter out = serializer.out;
         if (object == null) {
             out.writeNull();
@@ -64,8 +60,8 @@ public class AwtCodec implements ObjectSerializer {
         out.write('}');
     }
 
-    protected char writeClassName(SerializeWriter out, Class<?> clazz, char sep) {
-        if (out.isEnabled(SerializerFeature.WRITE_CLASS_NAME)) {
+    private char writeClassName(SerializeWriter out, Class<?> clazz, char sep) {
+        if (out.isEnabled(Feature.WRITE_CLASS_NAME)) {
             out.write('{');
             out.writeFieldName(Inspector.DEFAULT_TYPE_KEY);
             out.writeString(clazz.getName());

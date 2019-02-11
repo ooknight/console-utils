@@ -128,5 +128,5 @@ public class TypeReference<T> {
         return type;
     }
 
-    public final static Type LIST_STRING = new TypeReference<List<String>>() {}.getType();
+    public static final Type LIST_STRING = new TypeReference<List<String>>() {}.getType();
 }

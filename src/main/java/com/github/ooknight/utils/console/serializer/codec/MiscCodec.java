@@ -2,11 +2,10 @@ package com.github.ooknight.utils.console.serializer.codec;
 
 import com.github.ooknight.utils.console.Inspector;
 import com.github.ooknight.utils.console.JSONException;
+import com.github.ooknight.utils.console.serializer.Feature;
 import com.github.ooknight.utils.console.serializer.JSONSerializer;
 import com.github.ooknight.utils.console.serializer.ObjectSerializer;
 import com.github.ooknight.utils.console.serializer.SerializeWriter;
-import com.github.ooknight.utils.console.serializer.SerializerFeature;
-import com.github.ooknight.utils.console.util.IOUtils;
 import org.w3c.dom.Node;
 
 import javax.xml.transform.Transformer;
@@ -17,7 +16,6 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -29,14 +27,7 @@ import java.util.TimeZone;
 
 public class MiscCodec implements ObjectSerializer {
 
-    public final static MiscCodec instance = new MiscCodec();
-    private static boolean FILE_RELATIVE_PATH_SUPPORT = false;
-    private static Method method_paths_get;
-    private static boolean method_paths_get_error = false;
-
-    static {
-        FILE_RELATIVE_PATH_SUPPORT = "true".equals(IOUtils.getStringProperty("fastjson.deserializer.fileRelativePathSupport"));
-    }
+    public static final MiscCodec instance = new MiscCodec();
 
     private static String toString(org.w3c.dom.Node node) {
         try {
@@ -51,8 +42,8 @@ public class MiscCodec implements ObjectSerializer {
         }
     }
 
-    public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType,
-                      int features) throws IOException {
+    @Override
+    public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException {
         SerializeWriter out = serializer.out;
         if (object == null) {
             out.writeNull();
@@ -62,7 +53,7 @@ public class MiscCodec implements ObjectSerializer {
         String strVal;
         if (objClass == SimpleDateFormat.class) {
             String pattern = ((SimpleDateFormat) object).toPattern();
-            if (out.isEnabled(SerializerFeature.WRITE_CLASS_NAME)) {
+            if (out.isEnabled(Feature.WRITE_CLASS_NAME)) {
                 if (object.getClass() != fieldType) {
                     out.write('{');
                     out.writeFieldName(Inspector.DEFAULT_TYPE_KEY);
@@ -140,7 +131,7 @@ public class MiscCodec implements ObjectSerializer {
         out.writeString(strVal);
     }
 
-    protected void writeIterator(JSONSerializer serializer, SerializeWriter out, Iterator<?> it) {
+    private void writeIterator(JSONSerializer serializer, SerializeWriter out, Iterator<?> it) {
         int i = 0;
         out.write('[');
         while (it.hasNext()) {
@@ -152,6 +143,5 @@ public class MiscCodec implements ObjectSerializer {
             ++i;
         }
         out.write(']');
-        return;
     }
 }

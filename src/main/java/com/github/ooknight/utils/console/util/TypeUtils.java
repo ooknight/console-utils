@@ -4,9 +4,8 @@ import com.github.ooknight.utils.console.Inspector;
 import com.github.ooknight.utils.console.JSONException;
 import com.github.ooknight.utils.console.PropertyNamingStrategy;
 import com.github.ooknight.utils.console.annotation.JSONField;
-import com.github.ooknight.utils.console.annotation.JSONType;
+import com.github.ooknight.utils.console.serializer.Feature;
 import com.github.ooknight.utils.console.serializer.SerializeBeanInfo;
-import com.github.ooknight.utils.console.serializer.SerializerFeature;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -1370,72 +1369,26 @@ public class TypeUtils {
             , PropertyNamingStrategy propertyNamingStrategy //
             , boolean fieldBased //
     ) {
-        JSONType jsonType = TypeUtils.getAnnotation(beanType, JSONType.class);
         String[] orders = null;
         final int features;
         String typeName = null, typeKey = null;
-        if (jsonType != null) {
-            orders = jsonType.orders();
-            typeName = jsonType.typeName();
-            if (typeName.length() == 0) {
-                typeName = null;
-            }
-            PropertyNamingStrategy jsonTypeNaming = jsonType.naming();
-            if (jsonTypeNaming != PropertyNamingStrategy.CamelCase) {
-                propertyNamingStrategy = jsonTypeNaming;
-            }
-            features = SerializerFeature.of(jsonType.serialzeFeatures());
-            for (Class<?> supperClass = beanType.getSuperclass()
-                 ; supperClass != null && supperClass != Object.class
-                    ; supperClass = supperClass.getSuperclass()) {
-                JSONType superJsonType = TypeUtils.getAnnotation(supperClass, JSONType.class);
-                if (superJsonType == null) {
-                    break;
-                }
-                typeKey = superJsonType.typeKey();
-                if (typeKey.length() != 0) {
-                    break;
-                }
-            }
-            for (Class<?> interfaceClass : beanType.getInterfaces()) {
-                JSONType superJsonType = TypeUtils.getAnnotation(interfaceClass, JSONType.class);
-                if (superJsonType != null) {
-                    typeKey = superJsonType.typeKey();
-                    if (typeKey.length() != 0) {
-                        break;
-                    }
-                }
-            }
-            if (typeKey != null && typeKey.length() == 0) {
-                typeKey = null;
-            }
-        } else {
-            features = 0;
-        }
+        features = 0;
         // fieldName,field ，先生成fieldName的快照，减少之后的findField的轮询
         Map<String, Field> fieldCacheMap = new HashMap<>();
         //ParserConfig.parserAllFieldToCache(beanType, fieldCacheMap);
-        List<FieldInfo> fieldInfoList = fieldBased
-                ? computeGettersWithFieldBase(beanType, aliasMap, false, propertyNamingStrategy) //
-                : computeGetters(beanType, jsonType, aliasMap, fieldCacheMap, false, propertyNamingStrategy);
+        List<FieldInfo> fieldInfoList = computeGettersWithFieldBase(beanType, aliasMap, false, propertyNamingStrategy);
         FieldInfo[] fields = new FieldInfo[fieldInfoList.size()];
         fieldInfoList.toArray(fields);
         FieldInfo[] sortedFields;
         List<FieldInfo> sortedFieldList;
-        if (orders != null && orders.length != 0) {
-            sortedFieldList = fieldBased
-                    ? computeGettersWithFieldBase(beanType, aliasMap, true, propertyNamingStrategy) //
-                    : computeGetters(beanType, jsonType, aliasMap, fieldCacheMap, true, propertyNamingStrategy);
-        } else {
-            sortedFieldList = new ArrayList<>(fieldInfoList);
-            Collections.sort(sortedFieldList);
-        }
+        sortedFieldList = new ArrayList<>(fieldInfoList);
+        Collections.sort(sortedFieldList);
         sortedFields = new FieldInfo[sortedFieldList.size()];
         sortedFieldList.toArray(sortedFields);
         if (Arrays.equals(sortedFields, fields)) {
             sortedFields = fields;
         }
-        return new SerializeBeanInfo(beanType, jsonType, typeName, typeKey, features, fields, sortedFields);
+        return new SerializeBeanInfo(beanType, typeName, typeKey, features, fields, sortedFields);
     }
 
     public static List<FieldInfo> computeGettersWithFieldBase(
@@ -1451,62 +1404,24 @@ public class TypeUtils {
         return getFieldInfos(clazz, sorted, fieldInfoMap);
     }
 
-    public static List<FieldInfo> computeGetters(Class<?> clazz, //
-                                                 JSONType jsonType, //
-                                                 Map<String, String> aliasMap, //
-                                                 Map<String, Field> fieldCacheMap, //
-                                                 boolean sorted, //
-                                                 PropertyNamingStrategy propertyNamingStrategy //
-    ) {
-        throw new RuntimeException("unknow exception @ by ooknight");
-    }
-
     private static List<FieldInfo> getFieldInfos(Class<?> clazz, boolean sorted, Map<String, FieldInfo> fieldInfoMap) {
-        List<FieldInfo> fieldInfoList = new ArrayList<FieldInfo>();
-        String[] orders = null;
-        JSONType annotation = TypeUtils.getAnnotation(clazz, JSONType.class);
-        if (annotation != null) {
-            orders = annotation.orders();
+        List<FieldInfo> fieldInfoList = new ArrayList<>();
+        for (FieldInfo fieldInfo : fieldInfoMap.values()) {
+            fieldInfoList.add(fieldInfo);
         }
-        if (orders != null && orders.length > 0) {
-            LinkedHashMap<String, FieldInfo> map = new LinkedHashMap<String, FieldInfo>(fieldInfoList.size());
-            for (FieldInfo field : fieldInfoMap.values()) {
-                map.put(field.name, field);
-            }
-            int i = 0;
-            for (String item : orders) {
-                FieldInfo field = map.get(item);
-                if (field != null) {
-                    fieldInfoList.add(field);
-                    map.remove(item);
-                }
-            }
-            for (FieldInfo field : map.values()) {
-                fieldInfoList.add(field);
-            }
-        } else {
-            for (FieldInfo fieldInfo : fieldInfoMap.values()) {
-                fieldInfoList.add(fieldInfo);
-            }
-            if (sorted) {
-                Collections.sort(fieldInfoList);
-            }
+        if (sorted) {
+            Collections.sort(fieldInfoList);
         }
         return fieldInfoList;
     }
 
-    private static void computeFields(
-            Class<?> clazz, //
-            Map<String, String> aliasMap, //
-            PropertyNamingStrategy propertyNamingStrategy, //
-            Map<String, FieldInfo> fieldInfoMap, //
-            Field[] fields) {
+    private static void computeFields(Class<?> clazz, Map<String, String> aliasMap, PropertyNamingStrategy propertyNamingStrategy, Map<String, FieldInfo> fieldInfoMap, Field[] fields) {
         for (Field field : fields) {
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
             JSONField fieldAnnotation = field.getAnnotation(JSONField.class);
-            int ordinal = 0, serialzeFeatures = 0, parserFeatures = 0;
+            int ordinal = 0, serialzeFeatures = 0;
             String propertyName = field.getName();
             String label = null;
             if (fieldAnnotation != null) {
@@ -1514,7 +1429,7 @@ public class TypeUtils {
                     continue;
                 }
                 ordinal = fieldAnnotation.ordinal();
-                serialzeFeatures = SerializerFeature.of(fieldAnnotation.serialzeFeatures());
+                serialzeFeatures = Feature.of(fieldAnnotation.serialzeFeatures());
                 if (fieldAnnotation.name().length() != 0) {
                     propertyName = fieldAnnotation.name();
                 }
@@ -1532,8 +1447,7 @@ public class TypeUtils {
                 propertyName = propertyNamingStrategy.translate(propertyName);
             }
             if (!fieldInfoMap.containsKey(propertyName)) {
-                FieldInfo fieldInfo = new FieldInfo(propertyName, null, field, clazz, null, ordinal, serialzeFeatures, parserFeatures,
-                        null, fieldAnnotation, label);
+                FieldInfo fieldInfo = new FieldInfo(propertyName, null, field, clazz, null, ordinal, serialzeFeatures, null, fieldAnnotation, label);
                 fieldInfoMap.put(propertyName, fieldInfo);
             }
         }
@@ -1611,37 +1525,6 @@ public class TypeUtils {
             }
         }
         return null;
-    }
-
-    private static boolean isJSONTypeIgnore(Class<?> clazz, String propertyName) {
-        JSONType jsonType = TypeUtils.getAnnotation(clazz, JSONType.class);
-        if (jsonType != null) {
-            // 1、新增 includes 支持，如果 JSONType 同时设置了includes 和 ignores 属性，则以includes为准。
-            // 2、个人认为对于大小写敏感的Java和JS而言，使用 equals() 比 equalsIgnoreCase() 更好，改动的唯一风险就是向后兼容性的问题
-            // 不过，相信开发者应该都是严格按照大小写敏感的方式进行属性设置的
-            String[] fields = jsonType.includes();
-            if (fields.length > 0) {
-                for (int i = 0; i < fields.length; i++) {
-                    if (propertyName.equals(fields[i])) {
-                        return false;
-                    }
-                }
-                return true;
-            } else {
-                fields = jsonType.ignores();
-                for (int i = 0; i < fields.length; i++) {
-                    if (propertyName.equals(fields[i])) {
-                        return true;
-                    }
-                }
-            }
-        }
-        if (clazz.getSuperclass() != Object.class && clazz.getSuperclass() != null) {
-            if (isJSONTypeIgnore(clazz.getSuperclass(), propertyName)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public static boolean isGenericParamType(Type type) {
@@ -1728,17 +1611,6 @@ public class TypeUtils {
         return null;
     }
 
-    /**
-     * @deprecated
-     */
-    public static int getSerializeFeatures(Class<?> clazz) {
-        JSONType annotation = TypeUtils.getAnnotation(clazz, JSONType.class);
-        if (annotation == null) {
-            return 0;
-        }
-        return SerializerFeature.of(annotation.serialzeFeatures());
-    }
-
     public static String decapitalize(String name) {
         if (name == null || name.length() == 0) {
             return name;
@@ -1746,7 +1618,7 @@ public class TypeUtils {
         if (name.length() > 1 && Character.isUpperCase(name.charAt(1)) && Character.isUpperCase(name.charAt(0))) {
             return name;
         }
-        char chars[] = name.toCharArray();
+        char[] chars = name.toCharArray();
         chars[0] = Character.toLowerCase(chars[0]);
         return new String(chars);
     }

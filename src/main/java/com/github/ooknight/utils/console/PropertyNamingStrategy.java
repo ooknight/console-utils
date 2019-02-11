@@ -1,14 +1,15 @@
 package com.github.ooknight.utils.console;
 
 public enum PropertyNamingStrategy {
-    CamelCase, //
-    PascalCase, //
-    SnakeCase, //
-    KebabCase;
+    //
+    CAMEL,
+    PASCAL,
+    SNAKE,
+    KEBAB;
 
     public String translate(String propertyName) {
         switch (this) {
-            case SnakeCase: {
+            case SNAKE: {
                 StringBuilder buf = new StringBuilder();
                 for (int i = 0; i < propertyName.length(); ++i) {
                     char ch = propertyName.charAt(i);
@@ -24,7 +25,7 @@ public enum PropertyNamingStrategy {
                 }
                 return buf.toString();
             }
-            case KebabCase: {
+            case KEBAB: {
                 StringBuilder buf = new StringBuilder();
                 for (int i = 0; i < propertyName.length(); ++i) {
                     char ch = propertyName.charAt(i);
@@ -40,7 +41,7 @@ public enum PropertyNamingStrategy {
                 }
                 return buf.toString();
             }
-            case PascalCase: {
+            case PASCAL: {
                 char ch = propertyName.charAt(0);
                 if (ch >= 'a' && ch <= 'z') {
                     char[] chars = propertyName.toCharArray();
@@ -49,7 +50,7 @@ public enum PropertyNamingStrategy {
                 }
                 return propertyName;
             }
-            case CamelCase: {
+            case CAMEL: {
                 char ch = propertyName.charAt(0);
                 if (ch >= 'A' && ch <= 'Z') {
                     char[] chars = propertyName.toCharArray();

@@ -4,20 +4,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-/**
- * Created by wenshao on 05/08/2017.
- */
 public class ClassReader {
-    public  final byte[] b;
+
+    public final byte[] b;
+    public final int header;
     private final int[] items;
     private final String[] strings;
     private final int maxStringLength;
-    public  final int header;
     private boolean readAnnotations;
 
     public ClassReader(InputStream is, boolean readAnnotations) throws IOException {
         this.readAnnotations = readAnnotations;
-
         {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             byte[] buf = new byte[1024];
@@ -26,7 +23,6 @@ public class ClassReader {
                 if (len == -1) {
                     break;
                 }
-
                 if (len > 0) {
                     out.write(buf, 0, len);
                 }
@@ -34,7 +30,6 @@ public class ClassReader {
             is.close();
             this.b = out.toByteArray();
         }
-
         // parses the constant pool
         items = new int[readUnsignedShort(8)];
         int n = items.length;
@@ -86,7 +81,6 @@ public class ClassReader {
         int i, j; // loop variables
         int u, v; // indexes in b
         int anns = 0;
-
         //read annotations
         if (readAnnotations) {
             u = getAttributes();
@@ -99,7 +93,6 @@ public class ClassReader {
                 u += 6 + readInt(u + 4);
             }
         }
-
         // visits the header
         u = header;
         v = items[readUnsignedShort(u + 4)];
@@ -127,20 +120,11 @@ public class ClassReader {
                 v += 6 + readInt(v + 2);
             }
         }
-
         i = readUnsignedShort(v);
         v += 2;
         for (; i > 0; --i) {
             v += 6 + readInt(v + 2);
         }
-
-        if (anns != 0) {
-            for (i = readUnsignedShort(anns), v = anns + 2; i > 0; --i) {
-                String name = readUTF8(v, c);
-                classVisitor.visitAnnotation(name);
-            }
-        }
-
         // visits the fields
         i = readUnsignedShort(u);
         u += 2;
@@ -151,7 +135,6 @@ public class ClassReader {
                 u += 6 + readInt(u + 2);
             }
         }
-
         // visits the methods
         i = readUnsignedShort(u);
         u += 2;
@@ -193,7 +176,6 @@ public class ClassReader {
         String desc = readUTF8(u + 4, c);
         v = 0;
         w = 0;
-
         // looks for Code and Exceptions attributes
         j = readUnsignedShort(u + 6);
         u += 8;
@@ -216,18 +198,14 @@ public class ClassReader {
                 w += 2;
             }
         }
-
         // visits the method's code, if any
         MethodCollector mv = classVisitor.visitMethod(access, name, desc);
-
         if (mv != null && v != 0) {
             int codeLength = readInt(v + 4);
             v += 8;
-
             int codeStart = v;
             int codeEnd = v + codeLength;
             v = codeEnd;
-
             j = readUnsignedShort(v);
             v += 2;
             for (; j > 0; --j) {
@@ -248,7 +226,6 @@ public class ClassReader {
                 }
                 v += 6 + readInt(v + 2);
             }
-
             v = codeStart;
             // visits the local variable tables
             if (varTable != 0) {
@@ -318,12 +295,10 @@ public class ClassReader {
                         st = 2;
                     }
                     break;
-
                 case 1:  // byte 2 of 2-byte char or byte 3 of 3-byte char
                     buf[strLen++] = (char) ((cc << 6) | (c & 0x3F));
                     st = 0;
                     break;
-
                 case 2:  // byte 2 of 3-byte char
                     cc = (char) ((cc << 6) | (c & 0x3F));
                     st = 1;

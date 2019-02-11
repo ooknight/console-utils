@@ -5,31 +5,27 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Enumeration;
 
-
 public class EnumerationSerializer implements ObjectSerializer {
-    public static EnumerationSerializer instance = new EnumerationSerializer();
-    
+
+    public static final EnumerationSerializer instance = new EnumerationSerializer();
+
+    @Override
     public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException {
         SerializeWriter out = serializer.out;
-
         if (object == null) {
-            out.writeNull(SerializerFeature.WRITE_NULL_LIST_AS_EMPTY);
+            out.writeNull(Feature.WRITE_NULL_LIST_AS_EMPTY);
             return;
         }
-        
         Type elementType = null;
-        if (out.isEnabled(SerializerFeature.WRITE_CLASS_NAME)) {
+        if (out.isEnabled(Feature.WRITE_CLASS_NAME)) {
             if (fieldType instanceof ParameterizedType) {
                 ParameterizedType param = (ParameterizedType) fieldType;
                 elementType = param.getActualTypeArguments()[0];
             }
         }
-        
         Enumeration<?> e = (Enumeration<?>) object;
-        
         SerialContext context = serializer.context;
         serializer.setContext(context, object, fieldName, 0);
-
         try {
             int i = 0;
             out.append('[');
@@ -38,12 +34,10 @@ public class EnumerationSerializer implements ObjectSerializer {
                 if (i++ != 0) {
                     out.append(',');
                 }
-
                 if (item == null) {
                     out.writeNull();
                     continue;
                 }
-
                 ObjectSerializer itemSerializer = serializer.getObjectWriter(item.getClass());
                 itemSerializer.write(serializer, item, i - 1, elementType, 0);
             }

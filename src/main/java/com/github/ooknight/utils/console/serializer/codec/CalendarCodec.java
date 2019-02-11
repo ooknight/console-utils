@@ -1,16 +1,13 @@
 package com.github.ooknight.utils.console.serializer.codec;
 
-import com.github.ooknight.utils.console.Inspector;
 import com.github.ooknight.utils.console.serializer.BeanContext;
 import com.github.ooknight.utils.console.serializer.ContextObjectSerializer;
+import com.github.ooknight.utils.console.serializer.Feature;
 import com.github.ooknight.utils.console.serializer.JSONSerializer;
 import com.github.ooknight.utils.console.serializer.ObjectSerializer;
 import com.github.ooknight.utils.console.serializer.SerializeWriter;
-import com.github.ooknight.utils.console.serializer.SerializerFeature;
 import com.github.ooknight.utils.console.util.IOUtils;
 
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -18,13 +15,12 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 public class CalendarCodec implements ObjectSerializer, ContextObjectSerializer {
 
-    public final static CalendarCodec instance = new CalendarCodec();
-    private DatatypeFactory dateFactory;
+    public static final CalendarCodec instance = new CalendarCodec();
 
+    @Override
     public void write(JSONSerializer serializer, Object object, BeanContext context) throws IOException {
         SerializeWriter out = serializer.out;
         String format = context.getFormat();
@@ -35,16 +31,12 @@ public class CalendarCodec implements ObjectSerializer, ContextObjectSerializer 
             return;
         }
         DateFormat dateFormat = new SimpleDateFormat(format);
-        if (dateFormat == null) {
-            dateFormat = new SimpleDateFormat(Inspector.DEFFAULT_DATE_FORMAT, serializer.locale);
-            dateFormat.setTimeZone(serializer.timeZone);
-        }
         String text = dateFormat.format(calendar.getTime());
         out.writeString(text);
     }
 
-    public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features)
-            throws IOException {
+    @Override
+    public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException {
         SerializeWriter out = serializer.out;
         if (object == null) {
             out.writeNull();
@@ -56,10 +48,8 @@ public class CalendarCodec implements ObjectSerializer, ContextObjectSerializer 
         } else {
             calendar = (Calendar) object;
         }
-        if (out.isEnabled(SerializerFeature.USE_ISO8601_DATE_FORMAT)) {
-            final char quote = out.isEnabled(SerializerFeature.USE_SINGLE_QUOTES) //
-                    ? '\'' //
-                    : '\"';
+        if (out.isEnabled(Feature.USE_ISO8601_DATE_FORMAT)) {
+            final char quote = out.isEnabled(Feature.USE_SINGLE_QUOTES) ? '\'' : '\"';
             out.append(quote);
             int year = calendar.get(Calendar.YEAR);
             int month = calendar.get(Calendar.MONTH) + 1;
@@ -108,16 +98,5 @@ public class CalendarCodec implements ObjectSerializer, ContextObjectSerializer 
             Date date = calendar.getTime();
             serializer.write(date);
         }
-    }
-
-    public XMLGregorianCalendar createXMLGregorianCalendar(Calendar calendar) {
-        if (dateFactory == null) {
-            try {
-                dateFactory = DatatypeFactory.newInstance();
-            } catch (DatatypeConfigurationException e) {
-                throw new IllegalStateException("Could not obtain an instance of DatatypeFactory.", e);
-            }
-        }
-        return dateFactory.newXMLGregorianCalendar((GregorianCalendar) calendar);
     }
 }

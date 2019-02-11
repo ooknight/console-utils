@@ -51,19 +51,6 @@ public class JSONSerializer extends SerializeFilterable {
         this.config = config;
     }
 
-    public static void write(Writer out, Object object) {
-        SerializeWriter writer = new SerializeWriter();
-        try {
-            JSONSerializer serializer = new JSONSerializer(writer);
-            serializer.write(object);
-            writer.writeTo(out);
-        } catch (IOException ex) {
-            throw new JSONException(ex.getMessage(), ex);
-        } finally {
-            writer.close();
-        }
-    }
-
     public static void write(SerializeWriter out, Object object) {
         JSONSerializer serializer = new JSONSerializer(out);
         serializer.write(object);
@@ -118,7 +105,7 @@ public class JSONSerializer extends SerializeFilterable {
         }
         this.context = new SerialContext(parent, object, fieldName, features, fieldFeatures);
         if (references == null) {
-            references = new IdentityHashMap<Object, SerialContext>();
+            references = new IdentityHashMap<>();
         }
         this.references.put(object, context);
     }
@@ -134,9 +121,9 @@ public class JSONSerializer extends SerializeFilterable {
     }
 
     public final boolean isWriteClassName(Type fieldType, Object obj) {
-        return out.isEnabled(SerializerFeature.WRITE_CLASS_NAME) //
+        return out.isEnabled(Feature.WRITE_CLASS_NAME) //
                 && (fieldType != null //
-                || (!out.isEnabled(SerializerFeature.NOT_WRITE_ROOT_CLASS_NAME)) //
+                || (!out.isEnabled(Feature.NOT_WRITE_ROOT_CLASS_NAME)) //
                 || (context != null && (context.parent != null)));
     }
 
@@ -187,16 +174,9 @@ public class JSONSerializer extends SerializeFilterable {
     }
 
     public boolean checkValue(SerializeFilterable filterable) {
-        return (valueFilters != null && valueFilters.size() > 0) //
-                || (contextValueFilters != null && contextValueFilters.size() > 0) //
-                || (filterable.valueFilters != null && filterable.valueFilters.size() > 0)
+        return (contextValueFilters != null && contextValueFilters.size() > 0)
                 || (filterable.contextValueFilters != null && filterable.contextValueFilters.size() > 0)
                 || out.writeNonStringValueAsString;
-    }
-
-    public boolean hasNameFilters(SerializeFilterable filterable) {
-        return (nameFilters != null && nameFilters.size() > 0) //
-                || (filterable.nameFilters != null && filterable.nameFilters.size() > 0);
     }
 
     public boolean hasPropertyFilters(SerializeFilterable filterable) {
@@ -231,11 +211,11 @@ public class JSONSerializer extends SerializeFilterable {
         return out.toString();
     }
 
-    public void config(SerializerFeature feature, boolean state) {
+    public void config(Feature feature, boolean state) {
         out.config(feature, state);
     }
 
-    public boolean isEnabled(SerializerFeature feature) {
+    public boolean isEnabled(Feature feature) {
         return out.isEnabled(feature);
     }
 
@@ -263,14 +243,6 @@ public class JSONSerializer extends SerializeFilterable {
 
     public final void writeWithFieldName(Object object, Object fieldName) {
         writeWithFieldName(object, fieldName, null, 0);
-    }
-
-    protected final void writeKeyValue(char seperator, String key, Object value) {
-        if (seperator != '\0') {
-            out.write(seperator);
-        }
-        out.writeFieldName(key);
-        write(value);
     }
 
     public final void writeWithFieldName(Object object, Object fieldName, Type fieldType, int fieldFeatures) {
@@ -357,9 +329,5 @@ public class JSONSerializer extends SerializeFilterable {
 
     public ObjectSerializer getObjectWriter(Class<?> clazz) {
         return config.getObjectWriter(clazz);
-    }
-
-    public void close() {
-        this.out.close();
     }
 }

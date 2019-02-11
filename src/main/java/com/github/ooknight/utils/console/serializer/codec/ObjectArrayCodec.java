@@ -1,10 +1,10 @@
 package com.github.ooknight.utils.console.serializer.codec;
 
+import com.github.ooknight.utils.console.serializer.Feature;
 import com.github.ooknight.utils.console.serializer.JSONSerializer;
 import com.github.ooknight.utils.console.serializer.ObjectSerializer;
 import com.github.ooknight.utils.console.serializer.SerialContext;
 import com.github.ooknight.utils.console.serializer.SerializeWriter;
-import com.github.ooknight.utils.console.serializer.SerializerFeature;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -13,12 +13,12 @@ public class ObjectArrayCodec implements ObjectSerializer {
 
     public static final ObjectArrayCodec instance = new ObjectArrayCodec();
 
-    public final void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features)
-            throws IOException {
+    @Override
+    public final void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException {
         SerializeWriter out = serializer.out;
         Object[] array = (Object[]) object;
         if (object == null) {
-            out.writeNull(SerializerFeature.WRITE_NULL_LIST_AS_EMPTY);
+            out.writeNull(Feature.WRITE_NULL_LIST_AS_EMPTY);
             return;
         }
         int size = array.length;
@@ -33,7 +33,7 @@ public class ObjectArrayCodec implements ObjectSerializer {
             Class<?> preClazz = null;
             ObjectSerializer preWriter = null;
             out.append('[');
-            if (out.isEnabled(SerializerFeature.PRETTY_FORMAT)) {
+            if (out.isEnabled(Feature.PRETTY_FORMAT)) {
                 serializer.incrementIndent();
                 serializer.println();
                 for (int i = 0; i < size; ++i) {

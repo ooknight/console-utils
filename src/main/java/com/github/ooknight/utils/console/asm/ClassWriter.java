@@ -1,79 +1,42 @@
-/***
- * ASM: a very small and fast Java bytecode manipulation framework
- * Copyright (c) 2000-2007 INRIA, France Telecom
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the copyright holders nor the names of its
- *    contributors may be used to endorse or promote products derived from
- *    this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- * THE POSSIBILITY OF SUCH DAMAGE.
- */
 package com.github.ooknight.utils.console.asm;
 
 /**
- * 
  * @author Eric Bruneton
  */
 public class ClassWriter {
-    /**
-     * Minor and major version numbers of the class to be generated.
-     */
-    int                     version;
-
-    /**
-     * Index of the next item to be added in the constant pool.
-     */
-    int                     index;
 
     /**
      * The constant pool of this class.
      */
-    final ByteVector        pool;
-
+    final ByteVector pool;
+    /**
+     * A reusable key used to look for items in the {@link #items} hash table.
+     */
+    final Item key;
+    /**
+     * A reusable key used to look for items in the {@link #items} hash table.
+     */
+    final Item key2;
+    /**
+     * A reusable key used to look for items in the {@link #items} hash table.
+     */
+    final Item key3;
+    /**
+     * Minor and major version numbers of the class to be generated.
+     */
+    int version;
+    /**
+     * Index of the next item to be added in the constant pool.
+     */
+    int index;
     /**
      * The constant pool's hash table data.
      */
-    Item[]                  items;
-
+    Item[] items;
     /**
      * The threshold of the constant pool's hash table.
      */
-    int                     threshold;
-
-    /**
-     * A reusable key used to look for items in the {@link #items} hash table.
-     */
-    final Item              key;
-
-    /**
-     * A reusable key used to look for items in the {@link #items} hash table.
-     */
-    final Item              key2;
-
-    /**
-     * A reusable key used to look for items in the {@link #items} hash table.
-     */
-    final Item              key3;
-
+    int threshold;
     /**
      * A type table used to temporarily store internal names that will not necessarily be stored in the constant pool.
      * This type table is used by the control flow and data flow analysis algorithm used to compute stack map frames
@@ -82,72 +45,58 @@ public class ClassWriter {
      * from its index or, conversely, to get the index of an Item from its value. Each Item stores an internal name in
      * its {@link Item#strVal1} field.
      */
-    Item[]                  typeTable;
-
-    /**
-     * The access flags of this class.
-     */
-    private int             access;
-
-    /**
-     * The constant pool item that contains the internal name of this class.
-     */
-    private int             name;
-
+    Item[] typeTable;
     /**
      * The internal name of this class.
      */
-    String                  thisName;
-
-    /**
-     * The constant pool item that contains the internal name of the super class of this class.
-     */
-    private int             superName;
-
-    /**
-     * Number of interfaces implemented or extended by this class or interface.
-     */
-    private int             interfaceCount;
-
-    /**
-     * The interfaces implemented or extended by this class or interface. More precisely, this array contains the
-     * indexes of the constant pool items that contain the internal names of these interfaces.
-     */
-    private int[]           interfaces;
-
+    String thisName;
     /**
      * The fields of this class. These fields are stored in a linked list of {@link FieldWriter} objects, linked to each
      * other by their {@link FieldWriter#next} field. This field stores the first element of this list.
      */
-    FieldWriter             firstField;
-
+    FieldWriter firstField;
     /**
      * The fields of this class. These fields are stored in a linked list of {@link FieldWriter} objects, linked to each
      * other by their {@link FieldWriter#next} field. This field stores the last element of this list.
      */
-    FieldWriter             lastField;
-
+    FieldWriter lastField;
     /**
      * The methods of this class. These methods are stored in a linked list of {@link MethodWriter} objects, linked to
      * each other by their {@link MethodWriter#next} field. This field stores the first element of this list.
      */
-    MethodWriter            firstMethod;
-
+    MethodWriter firstMethod;
     /**
      * The methods of this class. These methods are stored in a linked list of {@link MethodWriter} objects, linked to
      * each other by their {@link MethodWriter#next} field. This field stores the last element of this list.
      */
-    MethodWriter            lastMethod;
+    MethodWriter lastMethod;
+    /**
+     * The access flags of this class.
+     */
+    private int access;
+    /**
+     * The constant pool item that contains the internal name of this class.
+     */
+    private int name;
+    /**
+     * The constant pool item that contains the internal name of the super class of this class.
+     */
+    private int superName;
+    /**
+     * Number of interfaces implemented or extended by this class or interface.
+     */
+    private int interfaceCount;
+    /**
+     * The interfaces implemented or extended by this class or interface. More precisely, this array contains the
+     * indexes of the constant pool items that contain the internal names of these interfaces.
+     */
+    private int[] interfaces;
 
-    // ------------------------------------------------------------------------
-    // Constructor
-    // ------------------------------------------------------------------------
-
-    public ClassWriter(){
+    public ClassWriter() {
         this(0);
     }
 
-    private ClassWriter(final int flags){
+    private ClassWriter(final int flags) {
         index = 1;
         pool = new ByteVector();
         items = new Item[256];
@@ -156,10 +105,6 @@ public class ClassWriter {
         key2 = new Item();
         key3 = new Item();
     }
-
-    // ------------------------------------------------------------------------
-    // Implementation of the ClassVisitor interface
-    // ------------------------------------------------------------------------
 
     public void visit(final int version, final int access, final String name, final String superName, final String[] interfaces) {
         this.version = version;
@@ -176,13 +121,9 @@ public class ClassWriter {
         }
     }
 
-    // ------------------------------------------------------------------------
-    // Other public methods
-    // ------------------------------------------------------------------------
-
     /**
      * Returns the bytecode of the class that was build with this class writer.
-     * 
+     *
      * @return the bytecode of the class that was build with this class writer.
      */
     public byte[] toByteArray() {
@@ -231,16 +172,12 @@ public class ClassWriter {
         return out.data;
     }
 
-    // ------------------------------------------------------------------------
-    // Utility methods: constant pool management
-    // ------------------------------------------------------------------------
-
     /**
      * Adds a number or string constant to the constant pool of the class being build. Does nothing if the constant pool
      * already contains a similar item.
-     * 
+     *
      * @param cst the value of the constant to be added to the constant pool. This parameter must be an {@link Integer},
-     * a {@link Float}, a {@link Long}, a {@link Double}, a {@link String} or a {@link Type}.
+     *            a {@link Float}, a {@link Long}, a {@link Double}, a {@link String} or a {@link Type}.
      * @return a new or already existing constant item with the given value.
      */
     Item newConstItem(final Object cst) {
@@ -250,7 +187,7 @@ public class ClassWriter {
             key.set(val);
             Item result = get(key);
             if (result == null) {
-                pool.putByte(3 /* INT */ ).putInt(val);
+                pool.putByte(3 /* INT */).putInt(val);
                 result = new Item(index++, key);
                 put(result);
             }
@@ -290,10 +227,10 @@ public class ClassWriter {
     /**
      * Adds a field reference to the constant pool of the class being build. Does nothing if the constant pool already
      * contains a similar item.
-     * 
+     *
      * @param owner the internal name of the field's owner class.
-     * @param name the field's name.
-     * @param desc the field's descriptor.
+     * @param name  the field's name.
+     * @param desc  the field's descriptor.
      * @return a new or already existing field reference item.
      */
     Item newFieldItem(final String owner, final String name, final String desc) {
@@ -312,11 +249,11 @@ public class ClassWriter {
     /**
      * Adds a method reference to the constant pool of the class being build. Does nothing if the constant pool already
      * contains a similar item.
-     * 
+     *
      * @param owner the internal name of the method's owner class.
-     * @param name the method's name.
-     * @param desc the method's descriptor.
-     * @param itf <tt>true</tt> if <tt>owner</tt> is an interface.
+     * @param name  the method's name.
+     * @param desc  the method's descriptor.
+     * @param itf   <tt>true</tt> if <tt>owner</tt> is an interface.
      * @return a new or already existing method reference item.
      */
     Item newMethodItem(final String owner, final String name, final String desc, final boolean itf) {
@@ -356,7 +293,6 @@ public class ClassWriter {
         }
         return result;
     }
-
 
     private Item get(final Item key) {
         Item i = items[key.hashCode % items.length];

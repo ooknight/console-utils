@@ -9,8 +9,9 @@ import java.lang.reflect.Type;
 
 public class CharacterCodec implements ObjectSerializer {
 
-    public final static CharacterCodec instance = new CharacterCodec();
+    public static final CharacterCodec instance = new CharacterCodec();
 
+    @Override
     public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException {
         SerializeWriter out = serializer.out;
         Character value = (Character) object;
@@ -18,7 +19,7 @@ public class CharacterCodec implements ObjectSerializer {
             out.writeString("");
             return;
         }
-        char c = value.charValue();
+        char c = value;
         if (c == 0) {
             out.writeString("\u0000");
         } else {

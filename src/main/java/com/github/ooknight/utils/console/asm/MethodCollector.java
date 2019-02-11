@@ -1,19 +1,12 @@
 package com.github.ooknight.utils.console.asm;
 
-/**
- * Created by wenshao on 05/08/2017.
- */
 public class MethodCollector {
 
     private final int paramCount;
-
     private final int ignoreCount;
-
-    private int currentParameter;
-
     private final StringBuilder result;
-
     protected boolean debugInfoPresent;
+    private int currentParameter;
 
     protected MethodCollector(int ignoreCount, int paramCount) {
         this.ignoreCount = ignoreCount;

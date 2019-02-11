@@ -21,7 +21,7 @@ public class FieldInfo implements Comparable<FieldInfo> {
     public final Method     method;
     public final Field      field;
 
-    private int             ordinal = 0;
+    private int             ordinal;
     public final Class<?>   fieldClass;
     public final Type       fieldType;
     public final Class<?>   declaringClass;
@@ -99,8 +99,7 @@ public class FieldInfo implements Comparable<FieldInfo> {
                      Type type, // 
                      int ordinal, // 
                      int serialzeFeatures, // 
-                     int parserFeatures, //
-                     JSONField fieldAnnotation, // 
+                     JSONField fieldAnnotation, //
                      JSONField methodAnnotation, //
                      String label){
         if (field != null) {
@@ -474,7 +473,6 @@ public class FieldInfo implements Comparable<FieldInfo> {
         if (this.fieldAnnotation != null) {
             return this.fieldAnnotation;
         }
-        
         return this.methodAnnotation;
     }
 

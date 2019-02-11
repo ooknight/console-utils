@@ -1,18 +1,3 @@
-/*
- * Copyright 1999-2017 Alibaba Group.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.github.ooknight.utils.console.util;
 
 import java.io.Closeable;
@@ -32,19 +17,16 @@ import java.util.Properties;
 
 import com.github.ooknight.utils.console.JSONException;
 
-/**
- * @author wenshao[szujobs@hotmail.com]
- */
 public class IOUtils {
     
-    public final static String     FASTJSON_PROPERTIES              = "fastjson.properties";
-    public final static String     FASTJSON_COMPATIBLEWITHJAVABEAN  = "fastjson.compatibleWithJavaBean";
-    public final static String     FASTJSON_COMPATIBLEWITHFIELDNAME = "fastjson.compatibleWithFieldName";
-    public final static Properties DEFAULT_PROPERTIES               = new Properties();
-    public final static Charset    UTF8                             = Charset.forName("UTF-8");
-    public final static char[]     DIGITS                           = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-    public final static boolean[]  firstIdentifierFlags             = new boolean[256];
-    public final static boolean[]  identifierFlags                  = new boolean[256];
+    public static final String     FASTJSON_PROPERTIES              = "fastjson.properties";
+    public static final String     FASTJSON_COMPATIBLEWITHJAVABEAN  = "fastjson.compatibleWithJavaBean";
+    public static final String     FASTJSON_COMPATIBLEWITHFIELDNAME = "fastjson.compatibleWithFieldName";
+    public static final Properties DEFAULT_PROPERTIES               = new Properties();
+    public static final Charset    UTF8                             = Charset.forName("UTF-8");
+    public static final char[]     DIGITS                           = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    public static final boolean[]  firstIdentifierFlags             = new boolean[256];
+    public static final boolean[]  identifierFlags                  = new boolean[256];
     static {
         for (char c = 0; c < firstIdentifierFlags.length; ++c) {
             if (c >= 'A' && c <= 'Z') {
@@ -107,12 +89,12 @@ public class IOUtils {
         }
     }
 
-    public final static byte[]    specicalFlags_doubleQuotes = new byte[161];
-    public final static byte[]    specicalFlags_singleQuotes = new byte[161];
-    public final static boolean[] specicalFlags_doubleQuotesFlags = new boolean[161];
-    public final static boolean[] specicalFlags_singleQuotesFlags = new boolean[161];
+    public static final byte[]    specicalFlags_doubleQuotes = new byte[161];
+    public static final byte[]    specicalFlags_singleQuotes = new byte[161];
+    public static final boolean[] specicalFlags_doubleQuotesFlags = new boolean[161];
+    public static final boolean[] specicalFlags_singleQuotesFlags = new boolean[161];
 
-    public final static char[]    replaceChars               = new char[93];
+    public static final char[]    replaceChars               = new char[93];
     static {
         specicalFlags_doubleQuotes['\0'] = 4;
         specicalFlags_doubleQuotes['\1'] = 4;
@@ -183,7 +165,7 @@ public class IOUtils {
         replaceChars['\\'] = '\\'; // 92
     }
 
-    public final static char[]    ASCII_CHARS                = { '0', '0', '0', '1', '0', '2', '0', '3', '0', '4', '0',
+    public static final char[]    ASCII_CHARS                = { '0', '0', '0', '1', '0', '2', '0', '3', '0', '4', '0',
             '5', '0', '6', '0', '7', '0', '8', '0', '9', '0', 'A', '0', 'B', '0', 'C', '0', 'D', '0', 'E', '0', 'F',
             '1', '0', '1', '1', '1', '2', '1', '3', '1', '4', '1', '5', '1', '6', '1', '7', '1', '8', '1', '9', '1',
             'A', '1', 'B', '1', 'C', '1', 'D', '1', 'E', '1', 'F', '2', '0', '2', '1', '2', '2', '2', '3', '2', '4',
@@ -322,22 +304,22 @@ public class IOUtils {
     /**
      * All possible chars for representing a number as a String
      */
-    final static char[] digits    = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+    static final char[] digits    = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
             'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 
-    final static char[] DigitTens = { '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '1', '1', '1', '1', '1',
+    static final char[] DigitTens = { '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '1', '1', '1', '1', '1',
             '1', '1', '1', '1', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '3', '3', '3', '3', '3', '3', '3',
             '3', '3', '3', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '5', '5', '5', '5', '5', '5', '5', '5',
             '5', '5', '6', '6', '6', '6', '6', '6', '6', '6', '6', '6', '7', '7', '7', '7', '7', '7', '7', '7', '7',
             '7', '8', '8', '8', '8', '8', '8', '8', '8', '8', '8', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9', };
 
-    final static char[] DigitOnes = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5',
+    static final char[] DigitOnes = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5',
             '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6',
             '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7',
             '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8',
             '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', };
 
-    final static int[]  sizeTable = { 9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999, Integer.MAX_VALUE };
+    static final int[]  sizeTable = { 9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999, Integer.MAX_VALUE };
 
     // Requires positive x
     public static int stringSize(int x) {

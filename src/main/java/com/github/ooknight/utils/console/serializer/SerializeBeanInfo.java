@@ -1,35 +1,22 @@
 package com.github.ooknight.utils.console.serializer;
 
-import com.github.ooknight.utils.console.annotation.JSONType;
 import com.github.ooknight.utils.console.util.FieldInfo;
 
 public class SerializeBeanInfo {
 
     protected final Class<?> beanType;
-    protected final String   typeName;
-    protected final String   typeKey;
-    protected final JSONType jsonType;
-
+    protected final String typeName;
+    protected final String typeKey;
     protected final FieldInfo[] fields;
     protected final FieldInfo[] sortedFields;
-    
-    protected int               features;
+    protected int features;
 
-    public SerializeBeanInfo(Class<?> beanType, //
-                             JSONType jsonType, //
-                             String typeName, //
-                             String typeKey,
-                             int features,
-                             FieldInfo[] fields, //
-                             FieldInfo[] sortedFields
-                             ){
+    public SerializeBeanInfo(Class<?> beanType, String typeName, String typeKey, int features, FieldInfo[] fields, FieldInfo[] sortedFields) {
         this.beanType = beanType;
-        this.jsonType = jsonType;
         this.typeName = typeName;
         this.typeKey = typeKey;
         this.features = features;
         this.fields = fields;
         this.sortedFields = sortedFields;
     }
-
 }

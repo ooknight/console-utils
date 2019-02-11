@@ -3,10 +3,10 @@ package com.github.ooknight.utils.console.serializer.codec;
 import com.github.ooknight.utils.console.Inspector;
 import com.github.ooknight.utils.console.serializer.BeanContext;
 import com.github.ooknight.utils.console.serializer.ContextObjectSerializer;
+import com.github.ooknight.utils.console.serializer.Feature;
 import com.github.ooknight.utils.console.serializer.JSONSerializer;
 import com.github.ooknight.utils.console.serializer.ObjectSerializer;
 import com.github.ooknight.utils.console.serializer.SerializeWriter;
-import com.github.ooknight.utils.console.serializer.SerializerFeature;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.joda.time.ReadablePartial;
@@ -18,14 +18,14 @@ import java.lang.reflect.Type;
 
 public class JodaCodec implements ObjectSerializer, ContextObjectSerializer {
 
-    public final static JodaCodec instance = new JodaCodec();
-    private final static String formatter_iso8601_pattern = "yyyy-MM-dd'T'HH:mm:ss";
-    private final static String formatter_iso8601_pattern_23 = "yyyy-MM-dd'T'HH:mm:ss.SSS";
-    private final static String formatter_iso8601_pattern_29 = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS";
-    private final static DateTimeFormatter formatter_iso8601 = DateTimeFormat.forPattern(formatter_iso8601_pattern);
+    public static final JodaCodec instance = new JodaCodec();
+    private static final String formatter_iso8601_pattern = "yyyy-MM-dd'T'HH:mm:ss";
+    private static final String formatter_iso8601_pattern_23 = "yyyy-MM-dd'T'HH:mm:ss.SSS";
+    private static final String formatter_iso8601_pattern_29 = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS";
+    private static final DateTimeFormatter formatter_iso8601 = DateTimeFormat.forPattern(formatter_iso8601_pattern);
 
-    public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType,
-                      int features) throws IOException {
+    @Override
+    public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException {
         SerializeWriter out = serializer.out;
         if (object == null) {
             out.writeNull();
@@ -34,11 +34,11 @@ public class JodaCodec implements ObjectSerializer, ContextObjectSerializer {
                 fieldType = object.getClass();
             }
             if (fieldType == LocalDateTime.class) {
-                final int mask = SerializerFeature.USE_ISO8601_DATE_FORMAT.mask();
+                final int mask = Feature.USE_ISO8601_DATE_FORMAT.mask();
                 LocalDateTime dateTime = (LocalDateTime) object;
                 String format = serializer.getDateFormatPattern();
                 if (format == null) {
-                    if ((features & mask) != 0 || serializer.isEnabled(SerializerFeature.USE_ISO8601_DATE_FORMAT)) {
+                    if ((features & mask) != 0 || serializer.isEnabled(Feature.USE_ISO8601_DATE_FORMAT)) {
                         format = formatter_iso8601_pattern;
                     } else {
                         int millis = dateTime.getMillisOfSecond();
@@ -51,7 +51,7 @@ public class JodaCodec implements ObjectSerializer, ContextObjectSerializer {
                 }
                 if (format != null) {
                     write(out, dateTime, format);
-                } else if (out.isEnabled(SerializerFeature.WRITE_DATE_USE_DATE_FORMAT)) {
+                } else if (out.isEnabled(Feature.WRITE_DATE_USE_DATE_FORMAT)) {
                     //使用固定格式转化时间
                     write(out, dateTime, Inspector.DEFFAULT_DATE_FORMAT);
                 } else {
@@ -63,6 +63,7 @@ public class JodaCodec implements ObjectSerializer, ContextObjectSerializer {
         }
     }
 
+    @Override
     public void write(JSONSerializer serializer, Object object, BeanContext context) throws IOException {
         SerializeWriter out = serializer.out;
         String format = context.getFormat();

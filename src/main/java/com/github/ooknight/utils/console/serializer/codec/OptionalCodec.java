@@ -13,10 +13,10 @@ import java.util.OptionalLong;
 
 public class OptionalCodec implements ObjectSerializer {
 
-    public static OptionalCodec instance = new OptionalCodec();
+    public static final OptionalCodec instance = new OptionalCodec();
 
-    public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType,
-                      int features) throws IOException {
+    @Override
+    public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException {
         if (object == null) {
             serializer.writeNull();
             return;

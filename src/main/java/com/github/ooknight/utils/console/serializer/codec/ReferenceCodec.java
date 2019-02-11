@@ -10,9 +10,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ReferenceCodec implements ObjectSerializer {
 
-    public final static ReferenceCodec instance = new ReferenceCodec();
+    public static final ReferenceCodec instance = new ReferenceCodec();
 
-    @SuppressWarnings("rawtypes")
+    @Override
     public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException {
         Object item;
         if (object instanceof AtomicReference) {

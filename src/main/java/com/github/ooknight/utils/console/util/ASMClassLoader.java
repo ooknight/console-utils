@@ -2,30 +2,21 @@ package com.github.ooknight.utils.console.util;
 
 import com.github.ooknight.utils.console.Inspector;
 import com.github.ooknight.utils.console.JSONException;
-import com.github.ooknight.utils.console.JSONPathException;
-import com.github.ooknight.utils.console.JSONWriter;
 import com.github.ooknight.utils.console.TypeReference;
-import com.github.ooknight.utils.console.serializer.AfterFilter;
 import com.github.ooknight.utils.console.serializer.BeanContext;
-import com.github.ooknight.utils.console.serializer.BeforeFilter;
 import com.github.ooknight.utils.console.serializer.ContextObjectSerializer;
 import com.github.ooknight.utils.console.serializer.ContextValueFilter;
+import com.github.ooknight.utils.console.serializer.Feature;
 import com.github.ooknight.utils.console.serializer.JSONSerializer;
 import com.github.ooknight.utils.console.serializer.JavaBeanSerializer;
-import com.github.ooknight.utils.console.serializer.LabelFilter;
-import com.github.ooknight.utils.console.serializer.Labels;
-import com.github.ooknight.utils.console.serializer.NameFilter;
 import com.github.ooknight.utils.console.serializer.ObjectSerializer;
 import com.github.ooknight.utils.console.serializer.PropertyFilter;
-import com.github.ooknight.utils.console.serializer.PropertyPreFilter;
 import com.github.ooknight.utils.console.serializer.SerialContext;
 import com.github.ooknight.utils.console.serializer.SerializeBeanInfo;
 import com.github.ooknight.utils.console.serializer.SerializeConfig;
 import com.github.ooknight.utils.console.serializer.SerializeFilter;
 import com.github.ooknight.utils.console.serializer.SerializeFilterable;
 import com.github.ooknight.utils.console.serializer.SerializeWriter;
-import com.github.ooknight.utils.console.serializer.SerializerFeature;
-import com.github.ooknight.utils.console.serializer.ValueFilter;
 
 import java.security.PrivilegedAction;
 import java.util.HashMap;
@@ -41,8 +32,6 @@ public class ASMClassLoader extends ClassLoader {
         Class<?>[] jsonClasses = new Class<?>[]{
                 Inspector.class,
                 JSONException.class,
-                JSONPathException.class,
-                JSONWriter.class,
                 TypeReference.class,
                 FieldInfo.class,
                 TypeUtils.class,
@@ -57,16 +46,9 @@ public class ASMClassLoader extends ClassLoader {
                 JSONSerializer.class,
                 SerializeWriter.class,
                 SerializeFilter.class,
-                Labels.class,
-                LabelFilter.class,
                 ContextValueFilter.class,
-                AfterFilter.class,
-                BeforeFilter.class,
-                NameFilter.class,
                 PropertyFilter.class,
-                PropertyPreFilter.class,
-                ValueFilter.class,
-                SerializerFeature.class,
+                Feature.class,
                 ContextObjectSerializer.class,
                 SerialContext.class,
                 SerializeConfig.class,

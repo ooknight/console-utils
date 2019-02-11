@@ -1,10 +1,10 @@
 package com.github.ooknight.utils.console.serializer.codec;
 
 import com.github.ooknight.utils.console.Inspector;
+import com.github.ooknight.utils.console.serializer.Feature;
 import com.github.ooknight.utils.console.serializer.JSONSerializer;
 import com.github.ooknight.utils.console.serializer.ObjectSerializer;
 import com.github.ooknight.utils.console.serializer.SerializeWriter;
-import com.github.ooknight.utils.console.serializer.SerializerFeature;
 import com.github.ooknight.utils.console.util.IOUtils;
 import com.github.ooknight.utils.console.util.TypeUtils;
 
@@ -17,8 +17,9 @@ import java.util.Date;
 
 public class DateCodec implements ObjectSerializer {
 
-    public final static DateCodec instance = new DateCodec();
+    public static final DateCodec instance = new DateCodec();
 
+    @Override
     public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException {
         SerializeWriter out = serializer.out;
         if (object == null) {
@@ -31,7 +32,7 @@ public class DateCodec implements ObjectSerializer {
         } else {
             date = TypeUtils.castToDate(object);
         }
-        if (out.isEnabled(SerializerFeature.WRITE_DATE_USE_DATE_FORMAT)) {
+        if (out.isEnabled(Feature.WRITE_DATE_USE_DATE_FORMAT)) {
             DateFormat format = serializer.getDateFormat();
             if (format == null) {
                 format = new SimpleDateFormat(Inspector.DEFFAULT_DATE_FORMAT, serializer.locale);
@@ -41,7 +42,7 @@ public class DateCodec implements ObjectSerializer {
             out.writeString(text);
             return;
         }
-        if (out.isEnabled(SerializerFeature.WRITE_CLASS_NAME)) {
+        if (out.isEnabled(Feature.WRITE_CLASS_NAME)) {
             if (object.getClass() != fieldType) {
                 if (object.getClass() == java.util.Date.class) {
                     out.write("new Date(");
@@ -58,8 +59,8 @@ public class DateCodec implements ObjectSerializer {
             }
         }
         long time = date.getTime();
-        if (out.isEnabled(SerializerFeature.USE_ISO8601_DATE_FORMAT)) {
-            char quote = out.isEnabled(SerializerFeature.USE_SINGLE_QUOTES) ? '\'' : '\"';
+        if (out.isEnabled(Feature.USE_ISO8601_DATE_FORMAT)) {
+            char quote = out.isEnabled(Feature.USE_SINGLE_QUOTES) ? '\'' : '\"';
             out.write(quote);
             Calendar calendar = Calendar.getInstance(serializer.timeZone, serializer.locale);
             calendar.setTimeInMillis(time);

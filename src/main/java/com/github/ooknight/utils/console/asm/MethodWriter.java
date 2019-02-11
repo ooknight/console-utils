@@ -1,32 +1,3 @@
-/***
- * ASM: a very small and fast Java bytecode manipulation framework
- * Copyright (c) 2000-2007 INRIA, France Telecom
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the copyright holders nor the names of its
- *    contributors may be used to endorse or promote products derived from
- *    this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- * THE POSSIBILITY OF SUCH DAMAGE.
- */
 package com.github.ooknight.utils.console.asm;
 
 /**
@@ -36,57 +7,46 @@ package com.github.ooknight.utils.console.asm;
 public class MethodWriter implements MethodVisitor {
 
     /**
-     * Next method writer (see {@link ClassWriter#firstMethod firstMethod}).
-     */
-    MethodWriter       next;
-
-    /**
      * The class writer to which this method must be added.
      */
-    final ClassWriter  cw;
-
-    /**
-     * Access flags of this method.
-     */
-    private int        access;
-
+    final ClassWriter cw;
     /**
      * The index of the constant pool item that contains the name of this method.
      */
-    private final int  name;
-
+    private final int name;
     /**
      * The index of the constant pool item that contains the descriptor of this method.
      */
-    private final int  desc;
-
+    private final int desc;
+    /**
+     * Next method writer (see {@link ClassWriter#firstMethod firstMethod}).
+     */
+    MethodWriter next;
     /**
      * Number of exceptions that can be thrown by this method.
      */
-    int                exceptionCount;
-
+    int exceptionCount;
     /**
      * The exceptions that can be thrown by this method. More precisely, this array contains the indexes of the constant
      * pool items that contain the internal names of these exception classes.
      */
-    int[]              exceptions;
-
+    int[] exceptions;
+    /**
+     * Access flags of this method.
+     */
+    private int access;
     /**
      * The bytecode of this method.
      */
-    private ByteVector code                                    = new ByteVector();
-
+    private ByteVector code = new ByteVector();
     /**
      * Maximum stack size of this method.
      */
-    private int        maxStack;
-
+    private int maxStack;
     /**
      * Maximum number of local variables for this method.
      */
-    private int        maxLocals;
-
-    // ------------------------------------------------------------------------
+    private int maxLocals;
 
     /*
      * Fields for the control flow graph analysis algorithm (used to compute the maximum stack size). A control flow
@@ -95,11 +55,7 @@ public class MethodWriter implements MethodVisitor {
      * basic block. Each node also stores the list of its successors in the graph, as a linked list of Edge objects.
      */
 
-    // ------------------------------------------------------------------------
-    // Constructor
-    // ------------------------------------------------------------------------
-
-    public MethodWriter(final ClassWriter cw, final int access, final String name, final String desc, final String signature, final String[] exceptions){
+    public MethodWriter(final ClassWriter cw, final int access, final String name, final String desc, final String signature, final String[] exceptions) {
         if (cw.firstMethod == null) {
             cw.firstMethod = this;
         } else {
@@ -110,7 +66,6 @@ public class MethodWriter implements MethodVisitor {
         this.access = access;
         this.name = cw.newUTF8(name);
         this.desc = cw.newUTF8(desc);
-
         if (exceptions != null && exceptions.length > 0) {
             exceptionCount = exceptions.length;
             this.exceptions = new int[exceptionCount];
@@ -119,10 +74,6 @@ public class MethodWriter implements MethodVisitor {
             }
         }
     }
-
-    // ------------------------------------------------------------------------
-    // Implementation of the MethodVisitor interface
-    // ------------------------------------------------------------------------
 
     public void visitInsn(final int opcode) {
         // adds the instruction to the bytecode of the method
@@ -195,7 +146,7 @@ public class MethodWriter implements MethodVisitor {
     public void visitJumpInsn(final int opcode, final Label label) {
         // Label currentBlock = this.currentBlock;
         // adds the instruction to the bytecode of the method
-        if ((label.status & 2 /* Label.RESOLVED */ ) != 0 && label.position - code.length < Short.MIN_VALUE) {
+        if ((label.status & 2 /* Label.RESOLVED */) != 0 && label.position - code.length < Short.MIN_VALUE) {
             throw new UnsupportedOperationException();
         } else {
             /*
@@ -229,11 +180,11 @@ public class MethodWriter implements MethodVisitor {
 
     public void visitIincInsn(final int var, final int increment) {
         // adds the instruction to the bytecode of the method
-//        if ((var > 255) || (increment > 127) || (increment < -128)) {
-//            code.putByte(196 /* WIDE */).put12(Opcodes.IINC, var).putShort(increment);
-//        } else {
-            code.putByte(132 /* Opcodes.IINC*/ ).put11(var, increment);
-//        }
+        //        if ((var > 255) || (increment > 127) || (increment < -128)) {
+        //            code.putByte(196 /* WIDE */).put12(Opcodes.IINC, var).putShort(increment);
+        //        } else {
+        code.putByte(132 /* Opcodes.IINC*/).put11(var, increment);
+        //        }
     }
 
     public void visitMaxs(final int maxStack, final int maxLocals) {
@@ -244,21 +195,9 @@ public class MethodWriter implements MethodVisitor {
     public void visitEnd() {
     }
 
-    // ------------------------------------------------------------------------
-    // Utility methods: control flow analysis algorithm
-    // ------------------------------------------------------------------------
-
-    // ------------------------------------------------------------------------
-    // Utility methods: stack map frames
-    // ------------------------------------------------------------------------
-
-    // ------------------------------------------------------------------------
-    // Utility methods: dump bytecode array
-    // ------------------------------------------------------------------------
-
     /**
      * Returns the size of the bytecode of this method.
-     * 
+     *
      * @return the size of the bytecode of this method.
      */
     final int getSize() {
@@ -276,7 +215,7 @@ public class MethodWriter implements MethodVisitor {
 
     /**
      * Puts the bytecode of this method in the given byte vector.
-     * 
+     *
      * @param out the byte vector into which the bytecode of this method must be copied.
      */
     final void put(final ByteVector out) {
@@ -289,7 +228,6 @@ public class MethodWriter implements MethodVisitor {
         if (exceptionCount > 0) {
             ++attributeCount;
         }
-
         out.putShort(attributeCount);
         if (code.length > 0) {
             int size = 12 + code.length + 8 * 0; // handlerCount
@@ -307,7 +245,5 @@ public class MethodWriter implements MethodVisitor {
                 out.putShort(exceptions[i]);
             }
         }
-
     }
-
 }

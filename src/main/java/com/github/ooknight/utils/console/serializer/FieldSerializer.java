@@ -1,138 +1,76 @@
-/*
- * Copyright 1999-2018 Alibaba Group.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.github.ooknight.utils.console.serializer;
 
 import com.github.ooknight.utils.console.Inspector;
 import com.github.ooknight.utils.console.annotation.JSONField;
-import com.github.ooknight.utils.console.annotation.JSONType;
 import com.github.ooknight.utils.console.serializer.codec.FloatCodec;
 import com.github.ooknight.utils.console.util.FieldInfo;
 import com.github.ooknight.utils.console.util.TypeUtils;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 
-/**
- * @author wenshao[szujobs@hotmail.com]
- */
 public class FieldSerializer implements Comparable<FieldSerializer> {
 
-    public final FieldInfo        fieldInfo;
-    protected final boolean       writeNull;
-    protected int                 features;
-
-    private final String          double_quoted_fieldPrefix;
-    private String                single_quoted_fieldPrefix;
-    private String                un_quoted_fieldPrefix;
-
-    protected BeanContext         fieldContext;
-
-    private String                format;
-    protected boolean             writeEnumUsingToString  = false;
-    protected boolean             writeEnumUsingName      = false;
-    protected boolean             disableCircularReferenceDetect = false;
-
-    protected boolean             serializeUsing          = false;
-
-    protected boolean             persistenceXToMany      = false; // OneToMany or ManyToMany
-    protected boolean             browserCompatible;
-
+    public final FieldInfo fieldInfo;
+    protected final boolean writeNull;
+    private final String double_quoted_fieldPrefix;
+    protected int features;
+    protected BeanContext fieldContext;
+    protected boolean writeEnumUsingToString = false;
+    protected boolean writeEnumUsingName = false;
+    protected boolean disableCircularReferenceDetect = false;
+    protected boolean serializeUsing = false;
+    protected boolean persistenceXToMany;
+    protected boolean browserCompatible;
+    private String single_quoted_fieldPrefix;
+    private String un_quoted_fieldPrefix;
+    private String format;
     private RuntimeSerializerInfo runtimeInfo;
-    
+
     public FieldSerializer(Class<?> beanType, FieldInfo fieldInfo) {
         this.fieldInfo = fieldInfo;
         this.fieldContext = new BeanContext(beanType, fieldInfo);
-
-        if (beanType != null
-                && (fieldInfo.isEnum
-                    || fieldInfo.fieldClass == long.class
-                    || fieldInfo.fieldClass == Long.class
-                    || fieldInfo.fieldClass == BigInteger.class
-                    || fieldInfo.fieldClass == BigDecimal.class)
-        ) {
-            JSONType jsonType = TypeUtils.getAnnotation(beanType,JSONType.class);
-            if (jsonType != null) {
-                for (SerializerFeature feature : jsonType.serialzeFeatures()) {
-                    if (feature == SerializerFeature.WRITE_ENUM_USING_TO_STRING) {
-                        writeEnumUsingToString = true;
-                    } else if(feature == SerializerFeature.WRITE_ENUM_USING_NAME){
-                        writeEnumUsingName = true;
-                    } else if(feature == SerializerFeature.DISABLE_CIRCULAR_REFERENCE_DETECT){
-                        disableCircularReferenceDetect = true;
-                    } else if(feature == SerializerFeature.BROWSER_COMPATIBLE){
-                        features |= SerializerFeature.BROWSER_COMPATIBLE.mask;
-                        browserCompatible = true;
-                    }
-                }
-            }
-        }
-        
         fieldInfo.setAccessible();
-
-        this.double_quoted_fieldPrefix = '"' + fieldInfo.name + "\":";
-
+        this.double_quoted_fieldPrefix = '"' + fieldInfo.name + "\"=";
         boolean writeNull = false;
         JSONField annotation = fieldInfo.getAnnotation();
         if (annotation != null) {
-            for (SerializerFeature feature : annotation.serialzeFeatures()) {
-                if ((feature.mask() & SerializerFeature.WRITE_MAP_NULL_FEATURES) != 0) {
+            for (Feature feature : annotation.serialzeFeatures()) {
+                if ((feature.mask() & Feature.WRITE_MAP_NULL_FEATURES) != 0) {
                     writeNull = true;
                     break;
                 }
             }
-
             format = annotation.format();
-
             if (format.trim().length() == 0) {
                 format = null;
             }
-
-            for (SerializerFeature feature : annotation.serialzeFeatures()) {
-                if (feature == SerializerFeature.WRITE_ENUM_USING_TO_STRING) {
+            for (Feature feature : annotation.serialzeFeatures()) {
+                if (feature == Feature.WRITE_ENUM_USING_TO_STRING) {
                     writeEnumUsingToString = true;
-                } else if(feature == SerializerFeature.WRITE_ENUM_USING_NAME){
+                } else if (feature == Feature.WRITE_ENUM_USING_NAME) {
                     writeEnumUsingName = true;
-                } else if(feature == SerializerFeature.DISABLE_CIRCULAR_REFERENCE_DETECT){
+                } else if (feature == Feature.DISABLE_CIRCULAR_REFERENCE_DETECT) {
                     disableCircularReferenceDetect = true;
-                } else if(feature == SerializerFeature.BROWSER_COMPATIBLE){
+                } else if (feature == Feature.BROWSER_COMPATIBLE) {
                     browserCompatible = true;
                 }
             }
-            
-            features = SerializerFeature.of(annotation.serialzeFeatures());
+            features = Feature.of(annotation.serialzeFeatures());
         }
-        
         this.writeNull = writeNull;
-
         persistenceXToMany = TypeUtils.isAnnotationPresentOneToMany(fieldInfo.method)
                 || TypeUtils.isAnnotationPresentManyToMany(fieldInfo.method);
     }
 
-    public void writePrefix(JSONSerializer serializer) throws IOException {
+    public void writePrefix(JSONSerializer serializer) {
         SerializeWriter out = serializer.out;
-
         if (out.quoteFieldNames) {
             if (out.useSingleQuotes) {
                 if (single_quoted_fieldPrefix == null) {
-                    single_quoted_fieldPrefix = '\'' + fieldInfo.name + "\':";
+                    single_quoted_fieldPrefix = '\'' + fieldInfo.name + "\'=";
                 }
                 out.write(single_quoted_fieldPrefix);
             } else {
@@ -140,14 +78,14 @@ public class FieldSerializer implements Comparable<FieldSerializer> {
             }
         } else {
             if (un_quoted_fieldPrefix == null) {
-                this.un_quoted_fieldPrefix = fieldInfo.name + ":";
+                this.un_quoted_fieldPrefix = fieldInfo.name + "=";
             }
             out.write(un_quoted_fieldPrefix);
         }
     }
 
     public Object getPropertyValueDirect(Object object) throws InvocationTargetException, IllegalAccessException {
-        Object fieldValue =  fieldInfo.get(object);
+        Object fieldValue = fieldInfo.get(object);
         if (persistenceXToMany && !TypeUtils.isHibernateInitialized(fieldValue)) {
             return null;
         }
@@ -155,7 +93,7 @@ public class FieldSerializer implements Comparable<FieldSerializer> {
     }
 
     public Object getPropertyValue(Object object) throws InvocationTargetException, IllegalAccessException {
-        Object propertyValue =  fieldInfo.get(object);
+        Object propertyValue = fieldInfo.get(object);
         if (format != null && propertyValue != null) {
             if (fieldInfo.fieldClass == Date.class) {
                 SimpleDateFormat dateFormat = new SimpleDateFormat(format, Inspector.DEFAULT_LOCALE);
@@ -165,15 +103,13 @@ public class FieldSerializer implements Comparable<FieldSerializer> {
         }
         return propertyValue;
     }
-    
+
     public int compareTo(FieldSerializer o) {
         return this.fieldInfo.compareTo(o.fieldInfo);
     }
-    
 
     public void writeValue(JSONSerializer serializer, Object propertyValue) throws Exception {
         if (runtimeInfo == null) {
-
             Class<?> runtimeFieldClass;
             if (propertyValue == null) {
                 runtimeFieldClass = this.fieldInfo.fieldClass;
@@ -195,10 +131,8 @@ public class FieldSerializer implements Comparable<FieldSerializer> {
             } else {
                 runtimeFieldClass = propertyValue.getClass();
             }
-
             ObjectSerializer fieldSerializer = null;
             JSONField fieldAnnotation = fieldInfo.getAnnotation();
-
             if (fieldAnnotation != null && fieldAnnotation.serializeUsing() != Void.class) {
                 fieldSerializer = (ObjectSerializer) fieldAnnotation.serializeUsing().newInstance();
                 serializeUsing = true;
@@ -210,71 +144,57 @@ public class FieldSerializer implements Comparable<FieldSerializer> {
                         fieldSerializer = new FloatCodec(format);
                     }
                 }
-
                 if (fieldSerializer == null) {
                     fieldSerializer = serializer.getObjectWriter(runtimeFieldClass);
                 }
             }
-
             runtimeInfo = new RuntimeSerializerInfo(fieldSerializer, runtimeFieldClass);
         }
-        
         final RuntimeSerializerInfo runtimeInfo = this.runtimeInfo;
-        
         final int fieldFeatures
                 = (disableCircularReferenceDetect
-                ? (fieldInfo.serialzeFeatures | SerializerFeature.DISABLE_CIRCULAR_REFERENCE_DETECT.mask)
+                ? (fieldInfo.serialzeFeatures | Feature.DISABLE_CIRCULAR_REFERENCE_DETECT.mask)
                 : fieldInfo.serialzeFeatures) | features;
-
         if (propertyValue == null) {
-            SerializeWriter out  = serializer.out;
-
+            SerializeWriter out = serializer.out;
             if (fieldInfo.fieldClass == Object.class
-                    && out.isEnabled(SerializerFeature.WRITE_MAP_NULL_FEATURES)) {
+                    && out.isEnabled(Feature.WRITE_MAP_NULL_FEATURES)) {
                 out.writeNull();
                 return;
             }
-
             Class<?> runtimeFieldClass = runtimeInfo.runtimeFieldClass;
-
             if (Number.class.isAssignableFrom(runtimeFieldClass)) {
-                out.writeNull(features, SerializerFeature.WRITE_NULL_NUMBER_AS_ZERO.mask);
+                out.writeNull(features, Feature.WRITE_NULL_NUMBER_AS_ZERO.mask);
                 return;
             } else if (String.class == runtimeFieldClass) {
-                out.writeNull(features, SerializerFeature.WRITE_NULL_STRING_AS_EMPTY.mask);
+                out.writeNull(features, Feature.WRITE_NULL_STRING_AS_EMPTY.mask);
                 return;
             } else if (Boolean.class == runtimeFieldClass) {
-                out.writeNull(features, SerializerFeature.WRITE_NULL_BOOLEAN_AS_FALSE.mask);
+                out.writeNull(features, Feature.WRITE_NULL_BOOLEAN_AS_FALSE.mask);
                 return;
             } else if (Collection.class.isAssignableFrom(runtimeFieldClass)) {
-                out.writeNull(features, SerializerFeature.WRITE_NULL_LIST_AS_EMPTY.mask);
+                out.writeNull(features, Feature.WRITE_NULL_LIST_AS_EMPTY.mask);
                 return;
             }
-
             ObjectSerializer fieldSerializer = runtimeInfo.fieldSerializer;
-
-            if ((out.isEnabled(SerializerFeature.WRITE_MAP_NULL_FEATURES))
+            if ((out.isEnabled(Feature.WRITE_MAP_NULL_FEATURES))
                     && fieldSerializer instanceof JavaBeanSerializer) {
                 out.writeNull();
                 return;
             }
-
             fieldSerializer.write(serializer, null, fieldInfo.name, fieldInfo.fieldType, fieldFeatures);
             return;
         }
-
         if (fieldInfo.isEnum) {
             if (writeEnumUsingName) {
                 serializer.out.writeString(((Enum<?>) propertyValue).name());
                 return;
             }
-
             if (writeEnumUsingToString) {
-                serializer.out.writeString(((Enum<?>) propertyValue).toString());
+                serializer.out.writeString((propertyValue).toString());
                 return;
             }
         }
-        
         Class<?> valueClass = propertyValue.getClass();
         ObjectSerializer valueSerializer;
         if (valueClass == runtimeInfo.runtimeFieldClass || serializeUsing) {
@@ -282,37 +202,32 @@ public class FieldSerializer implements Comparable<FieldSerializer> {
         } else {
             valueSerializer = serializer.getObjectWriter(valueClass);
         }
-        
         if (format != null && !(valueSerializer instanceof DoubleSerializer || valueSerializer instanceof FloatCodec)) {
             if (valueSerializer instanceof ContextObjectSerializer) {
-                ((ContextObjectSerializer) valueSerializer).write(serializer, propertyValue, this.fieldContext);    
+                ((ContextObjectSerializer) valueSerializer).write(serializer, propertyValue, this.fieldContext);
             } else {
                 serializer.writeWithFormat(propertyValue, format);
             }
             return;
         }
-
         if (fieldInfo.unwrapped) {
             if (valueSerializer instanceof JavaBeanSerializer) {
                 JavaBeanSerializer javaBeanSerializer = (JavaBeanSerializer) valueSerializer;
                 javaBeanSerializer.write(serializer, propertyValue, fieldInfo.name, fieldInfo.fieldType, fieldFeatures, true);
                 return;
             }
-
             if (valueSerializer instanceof MapSerializer) {
                 MapSerializer mapSerializer = (MapSerializer) valueSerializer;
                 mapSerializer.write(serializer, propertyValue, fieldInfo.name, fieldInfo.fieldType, fieldFeatures, true);
                 return;
             }
         }
-
-        if ((features & SerializerFeature.WRITE_CLASS_NAME.mask) != 0
+        if ((features & Feature.WRITE_CLASS_NAME.mask) != 0
                 && valueClass != fieldInfo.fieldClass
                 && JavaBeanSerializer.class.isInstance(valueSerializer)) {
             ((JavaBeanSerializer) valueSerializer).write(serializer, propertyValue, fieldInfo.name, fieldInfo.fieldType, fieldFeatures, false);
             return;
         }
-
         if (browserCompatible && propertyValue != null
                 && (fieldInfo.fieldClass == long.class || fieldInfo.fieldClass == Long.class)) {
             long value = (Long) propertyValue;
@@ -321,15 +236,15 @@ public class FieldSerializer implements Comparable<FieldSerializer> {
                 return;
             }
         }
-
         valueSerializer.write(serializer, propertyValue, fieldInfo.name, fieldInfo.fieldType, fieldFeatures);
     }
 
     static class RuntimeSerializerInfo {
-        final ObjectSerializer fieldSerializer;
-        final Class<?>         runtimeFieldClass;
 
-        public RuntimeSerializerInfo(ObjectSerializer fieldSerializer, Class<?> runtimeFieldClass){
+        final ObjectSerializer fieldSerializer;
+        final Class<?> runtimeFieldClass;
+
+        public RuntimeSerializerInfo(ObjectSerializer fieldSerializer, Class<?> runtimeFieldClass) {
             this.fieldSerializer = fieldSerializer;
             this.runtimeFieldClass = runtimeFieldClass;
         }
