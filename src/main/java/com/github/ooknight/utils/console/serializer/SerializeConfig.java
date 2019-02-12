@@ -244,17 +244,6 @@ public class SerializeConfig {
         return new JavaBeanSerializer(beanInfo);
     }
 
-    public boolean isAsmEnable() {
-        return asm;
-    }
-
-    public void setAsmEnable(boolean asmEnable) {
-        if (ASMUtils.IS_ANDROID) {
-            return;
-        }
-        this.asm = asmEnable;
-    }
-
     private void initSerializers() {
         put(Boolean.class, BooleanCodec.instance);
         put(Character.class, CharacterCodec.instance);
